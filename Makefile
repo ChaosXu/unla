@@ -3,7 +3,8 @@ DOCKER_REGISTRY ?= docker.io
 GHCR_REGISTRY ?= ghcr.io
 ALI_REGISTRY ?= registry.cn-hangzhou.aliyuncs.com
 
-IMAGE ?= ghcr.io/amoylab/unla/allinone:latest
+#IMAGE ?= ghcr.io/amoylab/unla/allinone:latest
+IMAGE ?= unla-allinone:latest
 APISERVER_IMAGE ?= ghcr.io/amoylab/unla/apiserver:latest
 MCP_GATEWAY_IMAGE ?= ghcr.io/amoylab/unla/mcp-gateway:latest
 MOCK_USER_SVC_IMAGE ?= ghcr.io/amoylab/unla/mock-server:latest
