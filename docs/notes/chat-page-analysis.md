@@ -140,6 +140,59 @@
 - 自动保存聊天消息到后端
 - 支持会话历史浏览和恢复
 
+## MCP 服务器和工具管理
+
+### 1. 列出可用的 MCP 服务器
+
+组件在初始化时会自动获取所有可用的 MCP 服务器：
+
+1. **数据获取**:
+   - 通过 [fetchMCPServers](/web/src/pages/chat/llm-chat-interface.tsx#L124-L131) useEffect 钩子调用 [getMCPServers](/web/src/services/api.ts#L27-L35) API 方法
+   - 该方法向后端 `GET /api/mcp/configs` 发起请求
+   - 后端由 [HandleListMCPServers](/internal/apiserver/handler/mcp.go#L226-L366) 处理并返回所有可用的 MCP 配置
+
+2. **UI 展示**:
+   - MCP 服务器列表显示在顶部工具栏的下拉选择框中
+   - 用户可以通过 [activeServices](/web/src/pages/chat/llm-chat-interface.tsx#L46-L46) 状态选择一个或多个 MCP 服务器
+   - 选择框使用 [Select](/web/src/pages/chat/llm-chat-interface.tsx#L721-L733) 组件实现多选功能
+
+### 2. 加载和显示 MCP 服务器工具
+
+当用户选择一个或多个 MCP 服务器后，系统会自动加载并显示这些服务器的工具：
+
+1. **工具加载**:
+   - 通过 [loadToolsForActiveServers](/web/src/pages/chat/llm-chat-interface.tsx#L133-L170) useEffect 钩子处理
+   - 遍历 [activeServices](/web/src/pages/chat/llm-chat-interface.tsx#L46-L46) 中的每个服务器名称
+   - 查找对应的服务器配置信息
+   - 调用 [mcpService.connect](/web/src/services/mcp.ts#L28-L61) 连接到 MCP 服务器
+   - 调用 [mcpService.getTools](/web/src/services/mcp.ts#L118-L137) 获取服务器工具列表
+
+2. **工具存储**:
+   - 工具信息存储在 [tools](/web/src/pages/chat/llm-chat-interface.tsx#L48-L48) 状态中，按服务器名称分组
+   - 格式为: `Record<string, Tool[]>`，其中键是服务器名称，值是该服务器的工具列表
+
+3. **UI 展示**:
+   - 工具信息显示在聊天输入区域上方的工具面板中
+   - 工具面板默认折叠，用户可以通过点击展开/折叠按钮来切换显示状态
+   - 展开时显示所有激活服务器的工具列表，包括工具名称、描述和参数信息
+   - 折叠时以标签形式显示所有工具名称
+
+### 3. 工具选择和使用
+
+当 LLM 决定使用某个工具时：
+
+1. **工具识别**:
+   - LLM 返回的工具调用中包含工具名称
+   - 工具名称格式为 `服务器名:工具名`（经过 sanitizeToolName 处理）
+   - 系统通过 [getSanitizedToolNameMap](/web/src/pages/chat/llm-chat-interface.tsx#L614-L627) 映射表将处理后的名称映射回原始名称
+
+2. **工具调用**:
+   - 调用 [mcpService.callTool](/web/src/services/mcp.ts#L170-L188) 执行工具
+   - 传入服务器名称、工具名称和参数
+   - 获取执行结果并返回给 LLM
+
+这种设计使得用户可以方便地选择和使用多个 MCP 服务器提供的工具，同时保持界面的整洁和易用性。
+
 ## 对话流程详解
 
 ### 一轮完整对话的处理过程
